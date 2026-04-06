@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIST100 Quiz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+  }
+  .container {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 30px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    color: #e94560;
+  }
+  .subtitle {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+  }
+  .scoreboard {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .score-box {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 10px 22px;
+    text-align: center;
+    border: 1px solid #0f3460;
+  }
+  .score-box .num {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+  .score-box .label { font-size: 0.78rem; color: #aaa; margin-top: 2px; }
+  .score-box.correct .num { color: #4ecca3; }
+  .score-box.wrong .num { color: #e94560; }
+  .score-box.total .num { color: #f5a623; }
+  .score-box.remain .num { color: #aaa; }
+
+  .card {
+    background: #16213e;
+    border-radius: 16px;
+    padding: 30px;
+    border: 1px solid #0f3460;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  .q-number {
+    font-size: 0.85rem;
+    color: #e94560;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    margin-bottom: 24px;
+    white-space: pre-wrap;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #0f3460;
+    border: 2px solid #0f3460;
+    color: #eee;
+    border-radius: 10px;
+    padding: 13px 18px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+  .option-btn:hover:not(:disabled) {
+    background: #1a4a8a;
+    border-color: #4ecca3;
+    transform: translateX(4px);
+  }
+  .option-btn:disabled { cursor: default; }
+  .option-btn .letter {
+    min-width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .option-btn.correct {
+    background: rgba(78, 204, 163, 0.2);
+    border-color: #4ecca3;
+    color: #4ecca3;
+  }
+  .option-btn.correct .letter { background: #4ecca3; color: #1a1a2e; }
+  .option-btn.wrong {
+    background: rgba(233, 69, 96, 0.2);
+    border-color: #e94560;
+    color: #e94560;
+  }
+  .option-btn.wrong .letter { background: #e94560; color: #fff; }
+  .option-btn.reveal {
+    background: rgba(78, 204, 163, 0.1);
+    border-color: #4ecca3;
+    color: #4ecca3;
+  }
+  .option-btn.reveal .letter { background: #4ecca3; color: #1a1a2e; }
+
+  .feedback {
+    margin-top: 20px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    display: none;
+  }
+  .feedback.correct { background: rgba(78,204,163,0.15); border: 1px solid #4ecca3; color: #4ecca3; }
+  .feedback.wrong { background: rgba(233,69,96,0.15); border: 1px solid #e94560; color: #e94560; }
+
+  .next-btn {
+    display: none;
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .next-btn:hover { background: #c73652; transform: translateY(-2px); }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #0f3460;
+    border-radius: 3px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e94560, #f5a623);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .finish-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .finish-screen h2 { font-size: 2rem; margin-bottom: 16px; color: #4ecca3; }
+  .finish-screen .big-score {
+    font-size: 5rem;
+    font-weight: bold;
+    color: #f5a623;
+    margin: 20px 0;
+  }
+  .finish-screen p { font-size: 1.1rem; color: #aaa; margin-bottom: 30px; }
+  .restart-btn {
+    padding: 14px 40px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .restart-btn:hover { background: #c73652; }
+
+  @media (max-width: 500px) {
+    .card { padding: 20px 16px; }
+    .q-text { font-size: 0.97rem; }
+    .option-btn { font-size: 0.93rem; padding: 11px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>HIST100 Quiz</h1>
+  <p class="subtitle">Sorular rastgele sıralanmaktadır &bull; Sınava hazırlık</p>
+
+  <div class="scoreboard">
+    <div class="score-box correct"><div class="num" id="sc-correct">0</div><div class="label">Dogru</div></div>
+    <div class="score-box wrong"><div class="num" id="sc-wrong">0</div><div class="label">Yanlis</div></div>
+    <div class="score-box total"><div class="num" id="sc-answered">0</div><div class="label">Cevaplanan</div></div>
+    <div class="score-box remain"><div class="num" id="sc-remain">100</div><div class="label">Kalan</div></div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+  <div class="card" id="quiz-card">
+    <div class="q-number" id="q-number"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">Sonraki Soru &rarr;</button>
+  </div>
+
+  <div class="card finish-screen" id="finish-screen">
+    <h2>Tebrikler!</h2>
+    <div class="big-score" id="final-score"></div>
+    <p id="final-text"></p>
+    <button class="restart-btn" onclick="restartQuiz()">Tekrar Baslat</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Bir devlette egemenliğin aşağıdakilerden hangisi tarafından kullanılması doğrudan teokratik bir yapılanmayı ifade eder?",
+    o: ["Halk","Din adamları","Askerler","Bilim adamları","Sanatkârlar"],
+    a: 1
+  },
+  {
+    q: "28 Eylül 1911'de Osmanlı Devleti'ne bir nota veren İtalya, bu isteğinin reddi üzerine hangi bölgeye asker çıkarmıştır?",
+    o: ["Makedonya","Selanik","Trablusgarp","Mora yarımadası","Musul"],
+    a: 2
+  },
+  {
+    q: `Mustafa Kemal, askeri büyükelçi olarak Sofya'ya gitmeden önceki günlerde siyasi görüşlerini şöyle belirtmişti; "Bu hanedandan ülkeye hayır yoktur. Hükümdarlık, ulusları mutlu ve gönençli kılmaz. Devletin esasını cumhuriyet ilkelerine göre hazırlamak gerekir."\n\nBuna göre Mustafa Kemal'in;\nI. Devlet düzenine muhalif olduğu\nII. Ulusal egemenliği savunduğu\nIII. İnkılapçı niteliklere sahip olduğu\nGörüşlerinden hangileri savunulabilir?`,
+    o: ["Yalnız I","Yalnız III","I ve II","II ve III","I, II ve III"],
+    a: 4
+  },
+  {
+    q: "Osmanlı toplumunun çok partili siyasi hayatla tanışması ve partiler aracılığıyla siyasi düşüncelerini savunabilme fırsatını aşağıdaki dönemlerin hangisinde elde etmiştir?",
+    o: ["II. Mahmut dönemi","I. Meşrutiyet dönemi","Tanzimat dönemi","III. Selim dönemi","II. Meşrutiyet Dönemi"],
+    a: 4
+  },
+  {
+    q: "Türk Anayasal gelişim tarihinde ilk defa Osmanlı Padişahı hangisiyle İngiltere'deki Magna Carta örneğinde olduğu gibi, kendisi dışında bir otoritenin varlığını kabul etmiştir?",
+    o: ["Sened-i İttifak","Tanzimat Fermanı","Islahat Fermanı","1876 Kanun-i Esasisi","Teşkilat-ı Esasiye"],
+    a: 0
+  },
+  {
+    q: "Şeyhülislam Dürrizade Abdullah Efendi'nin yayınladığı Anadolu hareketini karalayıcı ve liderlerini lanetleyici fetvasına karşı, 153 müftünün imzaladığı karşı fetvaya öncülük eden Ankara müftüsü kimdir?",
+    o: ["Elmalılı Hamdi Efendi","Molla Kasım","Rıfat (Börekçi) Bey","Bekir Sami Bey","Sait Molla"],
+    a: 2
+  },
+  {
+    q: "Çok uluslu devletleri ulusal devletlerle karşılaştırdığımızda en önemli farkın aşağıdakilerden hangisi olması beklenir?",
+    o: ["Çok uluslu devletlerde yönetimlerin belirli güç odakları arasında paylaştırılmış olması","Çok uluslu devletlerde toplumda birlikte hareket etme dürtüsünün yeterince gelişmemiş olması","Çok uluslu devletlerin yayılmacı siyaseti benimsemeleri","Çok uluslu devletlerin yarı bağımlı bir yapıya sahip olmaları","Çok uluslu devletlerde toplumdaki ayrışma ve ötekileşmenin artması"],
+    a: 1
+  },
+  {
+    q: "I. Dünya Savaşı sırasında Osmanlı hükümetinin Ermenileri tehcir için bir yasa çıkarması, aşağıdaki cephelerden hangisinin güvenliğini doğrudan sağlamaya yöneliktir?",
+    o: ["Çanakkale","Kafkas","Kanal","Süveyş","Galiçya"],
+    a: 1
+  },
+  {
+    q: "Osmanlı Devleti'nde 1876 yılında kabul edilen ilk anayasanın adı nedir?",
+    o: ["Magna Carta","Tanzimat Fermanı","Teşkilat-ı Esasiye","Kanun-ı Esasi","Islahat Fermanı"],
+    a: 3
+  },
+  {
+    q: "Birinci Dünya Savaşı sonunda Osmanlı'nın imzaladığı ateşkes antlaşması aşağıdakilerden hangisinde doğru olarak verilmiştir?",
+    o: ["Sevr","Mondros","Mudanya","Lozan","Ankara"],
+    a: 1
+  },
+  {
+    q: "Fransız Devriminin oluşum nedenleri içerisinde hangisi yer almaz?",
+    o: ["Ekonomik sıkıntılar ve ağır vergiler","Özgürlükler üzerindeki baskılar","Toplumda oluşan derin sınıflaşmalar","İşçi sınıfının artarak devam eden sorunları","Fransız aydınlarının özgürlüklerin önünü açma çabaları"],
+    a: 3
+  },
+  {
+    q: "Osmanlı Devleti, Batılı devletlerin azınlık haklarını bahane ederek iç işlerine karışmasını önlemek için 19. yüzyılda yeni düzenlemeler yapmıştır. Aşağıdakilerden hangisi bu amaçla yapılmış düzenlemelerden biri değildir?",
+    o: ["Tanzimat Fermanı","Kanun-ı Esasi","Meşrutiyet'in ilanı","Islahat Fermanı","Sened-i İttifak"],
+    a: 4
+  },
+  {
+    q: "Aşağıdakilerden hangisi XIX. yüzyılda Osmanlı Devleti'nde yapılan ıslahat hareketlerinin özelliklerinden biri değildir?",
+    o: ["Batılı devletlerin, Osmanlı Devleti'nin iç işlerine karışmasını önlemek istenmesi","Müslüman olmayanları memnun edecek çeşitli düzenlemeleri içermesi","İktisadi alanda gelişmenin hedeflenmesi","Avrupa kültürünün etkisinde hazırlanması","Avrupa devletlerinin desteğinin sağlanmasının amaçlanması"],
+    a: 2
+  },
+  {
+    q: "Kanun-u Esasi'yi, Tanzimat ve Islahat Fermanı'ndan ayıran özellik aşağıdakilerden hangisidir?",
+    o: ["Padişah izniyle kabul edilmiş olması","Batı uygarlığından etkilenmiş olması","Halka inanç özgürlüğünün tanınması","Halktan gelirine göre vergi alınması","Halka temsil hakkının tanınması"],
+    a: 4
+  },
+  {
+    q: "Tanzimat döneminde yapılan aşağıdaki yeniliklerden hangisi, padişahın üzerinde bir gücün kabul edilmeye başlandığının göstergesidir?",
+    o: ["Vilayet yönetimlerinin kurulması","Askeri alanda yeniliklerin yapılması","Müslüman olmayanlara yeni haklar verilmesi","Kanun yapacak kurumların oluşturulması","Şeyhülislamın görevlerinin sınırlandırılması"],
+    a: 3
+  },
+  {
+    q: "Osmanlı Devleti'nde Sened-i İttifak'ın imzalanmasıyla hangisinin siyasal gücü resmen tanınmıştır?",
+    o: ["Yeniçeriler","Ulema","Genç Osmanlılar","Mültezimler","Ayanlar"],
+    a: 4
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devletinin yıkılışının iç nedenlerindendir?",
+    o: ["Azınlıkların devlet aleyhindeki faaliyetleri","Ordu teşkilatının bozulması","Ekonomik yapının bozulması","Bürokrasideki bozulma","Hepsi"],
+    a: 4
+  },
+  {
+    q: "Fransız Devrimi'nin toplumlar üzerindeki en belirgin etkileri aşağıdaki seçeneklerden hangisinde doğru olarak verilmiştir?",
+    o: ["Rönesans ve Hümanist Düşünce","Merkantilizm ve Sermaye birikimi","Milliyetçilik ve Bağımsızlık hareketleri","Sömürgecilik Düşüncesi","Faşizm ve Devlet tekeli"],
+    a: 2
+  },
+  {
+    q: `Etnik kökenleri, dilleri, gelenekleri, inançları birbirinden ayrı siyasal gücün dayatmasıyla bir arada tutulan birden çok topluluğun bir araya gelerek oluşturduğu siyasal modele imparatorluk denilir.\n\nBu tür devlet anlayışında aşağıdakilerden hangisinin görülmesi beklenemez?`,
+    o: ["Ortak ulusal değerler","Farklı inançsal yapılar","Baskıcı siyasal yönetim anlayışı","Çok uluslu yapı","Dil karmaşası"],
+    a: 0
+  },
+  {
+    q: "Osmanlı İmparatorluğu'nun son dönemlerindeki düşünce akımlarından \"İslamcılık\" ve \"Osmanlıcılık\"ın etkilerini yitirmesi II. Meşrutiyet döneminde aşağıdaki fikir akımlarından hangisinin önem kazanmasına yol açmıştır?",
+    o: ["Türkçülük","Islahatçılık","Devletçilik","Ümmetçilik","Tanzimatçılık"],
+    a: 0
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devleti'nde 1876 yılında ilan edilen I. Meşrutiyetle birlikte görülen gelişmelerden biri değildir?",
+    o: ["Halkın da yönetime katılması mümkün olmuştur","Siyasi partiler oluşmuştur","İlk Osmanlı anayasası oluşturulmuştur","Ayan Meclisi meydana getirilmiştir","Padişaha geniş yetkiler tanınmıştır"],
+    a: 1
+  },
+  {
+    q: "Daha önce de başka toplumlar tarafından denemesi yapılan ______, Jan Gutenberg tarafından 1450 yılında icat edildi. _______, büyük bir devrim yaratmıştı; çünkü bilgiyi hızlı yaymanın en etkili yoluydu.\n\nYukarıdaki paragrafta boş bırakılan bölümlere aşağıdaki kavramlardan hangisinin getirilmesi uygun düşer?",
+    o: ["Barut","Ateşli silahlar","Pusula","Matbaa","Yazı"],
+    a: 3
+  },
+  {
+    q: "Aşağıdakilerden hangisi ile ülkedeki direniş cemiyetleri \"Anadolu ve Rumeli Müdafaa-i Hukuk Cemiyeti\" adı altında birleştirilmiştir?",
+    o: ["Amasya Protokolü","Amasya Genelgesi","Erzurum Kongresi","Sivas Kongresi","Misak-ı Milli"],
+    a: 3
+  },
+  {
+    q: "Mustafa Kemal Paşa, Kurtuluş Savaşı'nı başlatmak için aşağıdakilerden hangisine öncelik vermiştir?",
+    o: ["Saltanatı ve hilafeti kaldırmak","Düzenli bir ordu kurmak","Ulusu bilinçlendirip örgütlemek","İç ayaklanmaları bastırmak","Yeni bir anayasa hazırlamak"],
+    a: 2
+  },
+  {
+    q: `Erzurum Kongresi'nde "Azınlıklara, siyasal egemenliği ve sosyal dengeyi bozacak şekilde yeni birtakım özel haklar verilmesi kabul edilmeyecektir" kararı alınmıştır.\n\nBu karar aşağıdakilerden hangisine bir tepkidir?`,
+    o: ["Her türlü işgal ve ayrıcalıklara","Azınlıkların İstanbul'da kalmasına","Azınlıklara daha önce verilmiş imtiyazlara","Patrikhanenin Rumların dinî temsilcisi olmasına","Türkiye içindeki Müslüman olmayan azınlıkların Türk tebaası sayılmasına"],
+    a: 0
+  },
+  {
+    q: "Ulusal Kurtuluş Savaşı'nda, bağımsızlık düşüncesinin dayanacağı gücün \"ulus iradesi\" olduğu, ilk kez aşağıdakilerin hangisinde vurgulanmıştır?",
+    o: ["Amasya Genelgesi","Erzurum Kongresi kararları","Misak-ı Milli","Sivas Kongresi kararları","Amasya Görüşmesi"],
+    a: 0
+  },
+  {
+    q: "Aşağıdakilerden hangisi, Çanakkale Savaşı'nın sonuçları arasında yer almaz?",
+    o: ["Birinci Dünya Savaşının süresinin uzaması","Dolaylı olarak Rusya'da yönetim değişikliğinin yaşanması","Amerika'nın savaşa girmesine yol açması","Eğitimli ve genç nüfusun yitirilmesi","Mustafa Kemal Paşa'nın Ulusal Kurtuluş Savaşı Önderi olmasına zemin hazırlaması"],
+    a: 2
+  },
+  {
+    q: "I. TBMM'de Mustafa Kemal Paşa ve O'nun düşüncelerini paylaşanlar tarafından kurulan grup hangisidir?",
+    o: ["Müdafaa-i Hukuk","Islahat","Tesanüt","Felah-ı Vatan","Azm-i Milli"],
+    a: 0
+  },
+  {
+    q: `Amasya Genelgesi'nde "vatanın bütünlüğü ve bağımsızlının tehlikede olduğu, İstanbul Hükümeti'nin sorumluluğunu yerine getiremediği ve ulusu yok olmuş duruma düşürdüğü" belirtilmiştir.\n\nBu sözlerin Kurtuluş Savaşı hakkında aşağıdakilerden hangisiyle ilgili bilgi verdiği savunulabilir?`,
+    o: ["Süresi","Gerekçesi","Programı","Kadrosu","Sonucu"],
+    a: 1
+  },
+  {
+    q: "Almanya'nın Birinci Dünya Savaşında Osmanlı Devleti'ni kendi yanına çekmeye çalışmasının nedenleri arasında aşağıdakilerden hangisi gösterilemez?",
+    o: ["İtilaf Devletleri'nin savaşacağı cephelerin sayısını artırmak","Osmanlı Devleti'nin halifelik gücünden yararlanmak","Osmanlı Devleti'nin insan gücünü değerlendirmek","Osmanlı Devleti'nin teknik gücünden faydalanmak","Ortadoğu'da egemenliğin İngiltere'nin eline geçmesini önlemek"],
+    a: 3
+  },
+  {
+    q: "Sivas Kongresi'nde, tüm direniş cemiyetlerinin Anadolu ve Rumeli Müdafaa-i Hukuk Cemiyeti adı altında toplanması kararının alınmasındaki temel hedef hangisidir?",
+    o: ["Ulusal mücadeleyi tek elden yönetmek","Asker iktidarını güçlendirmek","İstanbul hükümetine baskı yapmak","İşgalci güçleri zor durumda bırakmak","Yurt içinde çıkan isyanları kolayca bastırmak"],
+    a: 0
+  },
+  {
+    q: "Anlaşma Devletlerinin İstanbul'u resmen işgal etmeleri, aşağıdaki gelişmelerden hangisine vermiş oldukları tepkinin sonucudur?",
+    o: ["Amasya Genelgesi'nin yayımlanmasına","Osmanlı Meclisi'nin yeniden açılmasına","Sivas Kongresi'nde alınmış olan kararlara","Misak-ı Milli'nin onaylanmasına","Mustafa Kemal Paşa'nın Ankara'ya yerleşmesine"],
+    a: 3
+  },
+  {
+    q: "I. TBMM'nin en önemli niteliklerinden birisi de yasama, yürütme ve yargı erkini kendisinde toplamasıdır. Güçler birliği adı verilen bu niteliğin I. TBMM'nin yapısal özellikleri içinde bulunmasının temel gerekçesi hangi seçenekte belirtilmiştir?",
+    o: ["Olağanüstü savaş koşullarında kısa sürede kararlar alıp uygulayabilmek","Ulusal egemenliğin her şeyin üzerinde olduğunu göstermek","İtilaf Devletleri'ne TBMM'nin varlığını kabul ettirmek","Baskıcı bir yönetim tarzı oluşturmak","Milli Mücadele'de insan potansiyelinden daha fazla yararlanmak"],
+    a: 0
+  },
+  {
+    q: "Aşağıdakilerden hangisi \"Milli varlığa zararlı\" (ulusal direniş karşıtı) siyasi oluşumlardan biri değildir?",
+    o: ["İngiliz Muhipleri Cemiyeti","İslam Teali Cemiyeti","Redd-i İlhak Cemiyeti","Hürriyet ve İtilaf Partisi","Wilson Prensipleri Cemiyeti"],
+    a: 2
+  },
+  {
+    q: "Kuvayı Milliye teşkilatı aşağıdaki gelişmelerden hangisi sonucunda ortaya çıkmıştır?",
+    o: ["Wilson ilkelerinin ilanı","Amasya Genelgesi","Mondros Ateşkesi","Erzurum Kongresi","Sivas Kongresi"],
+    a: 2
+  },
+  {
+    q: "Kurtuluş Savaşı sırasında Damat Ferit Paşa yönetiminin yaptığı çalışmalar arasında aşağıdakilerden hangisi yer almaz?",
+    o: ["Anadolu hareketini karalayıcı fetvalar oluşturma","Ulusal hareketin liderlerini hain ilan etmek","Anadolu halkını TBMM'ye karşı kışkırtmak","Alman hükümeti ile işbirliği yapmak","İşgalci güçlerle ortak politikalar üretmek"],
+    a: 3
+  },
+  {
+    q: `Mustafa Kemal Havza Genelgesi'nde,\n- İzmir'in işgalinin protesto edilmesini\n- İtilaf Devletleri'ne protesto telgrafı çekilmesini\n- Anadolu'da yaşayan azınlıklara iyi davranılmasını istemiştir.\n\nBu duruma göre; aşağıdakilerden hangisi Mustafa Kemal'in hedeflerinden biri değildir?`,
+    o: ["Milli bilincin uyanmasını sağlamak","İtilaf Devletleri'yle iyi ilişkiler kurmak","Türk milletinin tepkisini batılı devletlere iletmek","Ülke içi çatışmaları engellemek","İşgallere karşı milleti uyarmak"],
+    a: 1
+  },
+  {
+    q: "Aşağıdaki hangi belgede; ilk kez Egemenliğin kaynağı millettir/ulustur denilmiştir?",
+    o: ["Amasya Genelgesi","Amasya Protokolü","Sivas Kongresi Kararları","Havza Genelgesi","Erzurum Kongresi Kararları"],
+    a: 0
+  },
+  {
+    q: "Mustafa Kemal aşağıdaki hangi gelişme öncesinde askeri görevlerinden ayrılarak istifasını verip, \"sine-i millete\" dönmüştür?",
+    o: ["Amasya Genelgesi","Anadolu'ya geçiş","Havza Genelgesi","Amasya Görüşmeleri","Erzurum Kongresi"],
+    a: 4
+  },
+  {
+    q: "Aşağıdakilerden hangisi I. TBMM'nin özelliklerinden biri değildir?",
+    o: ["Siyasi partileri bünyesinde barındırması","Ulusal bir yapıya sahip olması","Tam bağımsızlık fikrini benimsemesi","İhtilalci bir yapıya sahip olması","Kurucu meclis olması"],
+    a: 0
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devleti'nde Batılılaşma hareketlerinin başladığı Lale Devri'nde (1718-1730) meydana gelen gelişmelerden biridir?",
+    o: ["Meclis-i Mebusan'ın açılması","Yeniçeri Ocağı'nın kaldırılması","İbrahim Mütefferika'nın matbaayı kurması","Veraset sisteminin değiştirilmesi","Islahat Fermanı'nın ilan edilmesi"],
+    a: 2
+  },
+  {
+    q: "II. Mahmut döneminde (1808-1839) Batılılaşma hareketleri çerçevesinde kurulan Batılı tarzdaki yeni askeri birliğin adı aşağıdakilerden hangisidir?",
+    o: ["Kuva-yı İnzibatiye","Kuva-yı Milliye","Asakir-i Mansure-i Muhammediye","Hamidiye Alayları","Nizam-ı Cedit"],
+    a: 2
+  },
+  {
+    q: "Abdülmecit döneminde 1856 yılında hangi gelişme sonucunda gayrimüslimlere yeni haklar ve bazı ayrıcalıklar tanınmıştır?",
+    o: ["Sened-i İttifak imzalanması","Gülhane Hatt-ı Hümayun'un ilan edilmesi","Mecelle'nin hazırlanması","Islahat Fermanı'nın ilan edilmesi","İrad-ı Cedit'in kurulması"],
+    a: 3
+  },
+  {
+    q: "1909 yılında İstanbul'da Meşruti yönetime karşı çıkan isyan aşağıdakilerden hangisidir?",
+    o: ["Kuleli Vakası","31 Mart Vakası","Vaka-yı Vakvakiye","Vaka-yı Hayriye","Takvim-i Vakayi"],
+    a: 1
+  },
+  {
+    q: "Mustafa Kemal Bey, 1909 yılında ortaya çıkan 31 Mart Olayı'nın bastırılmasını sağlayan, aşağıdaki orduların hangisinde kurmay subay olarak görev almıştır?",
+    o: ["Yıldırım Orduları","XIV. Kolordu","Hareket Ordusu","III. Ordu","Hamidiye Alayları"],
+    a: 2
+  },
+  {
+    q: "I- Tanzimat Dönemi\nII- Meşrutiyet Dönemi\nIII- Lale Devri\n\nYukarıdaki dönemlerin kronolojik sıralaması aşağıdakilerden hangisinde doğru olarak verilmiştir?",
+    o: ["I, II, III","III-I-II","III, II, I","II, I, III","I, III, II"],
+    a: 1
+  },
+  {
+    q: "I. Balkan Savaşı'nda Osmanlı Devleti'nin yenilgiye uğraması;\nI- Ordu içindeki siyasi çekişmeler,\nII- Rusya'nın Balkan Devletleri'ne yardım etmesi,\nIII- Kıbrıs'ın İngilizler tarafından işgal edilmesi,\nOlaylarından hangileriyle açıklanabilir?",
+    o: ["Yalnız I","I ve II","Yalnız III","I, II ve III","II ve III"],
+    a: 1
+  },
+  {
+    q: "XVI. Yüzyılda Almanya'da Luther'in öncülüğünde başlayan hareket aşağıdakilerden hangisidir?",
+    o: ["Aydınlanma","Sanayileşme","Reform","Feminizm","İşçi Hareketleri"],
+    a: 2
+  },
+  {
+    q: "II. Mahmut Dönemi'nde 1826'da Yeniçeri Ocağı'nın kaldırılmasına verilen isim nedir?",
+    o: ["Takvim-i Vakayi","Kuleli Vakası","Vaka-yı Hayriye","Nizam-ı Cedit","Encümeni Daniş"],
+    a: 2
+  },
+  {
+    q: "Tanzimat Döneminde kurulmuş olan \"Genç Osmanlılar Cemiyeti\" aşağıdakilerden hangisinin gerçekleşmesinde etkili olmuştur?",
+    o: ["Sened-i İttifakın hazırlanmasında","Yeniçeri Ocağının kaldırılmasında","Meşrutiyetin İlanında","Islahat Fermanı'nın ilan edilmesinde","Nizam-ı Cedit'in kurulmasında"],
+    a: 2
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devleti'nde ortaya çıkan fikir akımlarından biri değildir?",
+    o: ["Batıcılık","İslamcılık","Türkçülük","Pancermenizm","Osmanlıcılık"],
+    a: 3
+  },
+  {
+    q: "Trablusgarp Savaşından sonra Osmanlı Devleti ile İtalya arasında hangi antlaşma imzalanmıştır?",
+    o: ["Atina Antlaşması","İstanbul Antlaşması","Berlin Antlaşması","Uşi Antlaşması","Kars Antlaşması"],
+    a: 3
+  },
+  {
+    q: "Mustafa Kemal Paşa I. Dünya Harbi'nde hangi cephede \"Anafartalar Kahramanı\" olmuştur?",
+    o: ["Kafkas Cephesi","Kanal Cephesi","Çanakkale Cephesi","Galiçya Cephesi","Filistin Cephesi"],
+    a: 2
+  },
+  {
+    q: "Aşağıdaki bilgilerden hangisi doğrudur?",
+    o: ["İbrahim Mütefferika Lale Devrinde matbaayı kurmuştur.","Yeniçeri Ocağı Meşrutiyet döneminde kapatılmıştır.","Rönesans Rusya'da ortaya çıkmış ve Avrupa'ya yayılmıştır.","Aydınlanmanın temel düşünce tarzı Skolastik Düşüncedir.","Trablusgarp, Kırım Savaşı sırasında kaybedilmiştir."],
+    a: 0
+  },
+  {
+    q: "Mustafa Kemal Bey 1913 yılında hangi savaştan sonra Bulgaristan'a ateşemiliter olarak görevlendirilmiştir?",
+    o: ["Trablusgarp Savaşı","Balkan Savaşları","I. Dünya Harbi","Kurtuluş Savaşı","Kırım Savaşı"],
+    a: 1
+  },
+  {
+    q: "Aşağıdaki bilgilerden hangisi yanlıştır?",
+    o: ["Nizam-ı Cedit III. Selim Döneminde kurulmuştur.","Meclis-i Mebusan Tanzimat Dönemi'nde açılmıştır.","Yirmisekiz Mehmet Çelebi elçi olarak Paris'e gönderilmiştir.","Hümanizm hareketi Batı Avrupa'da ortaya çıkmıştır.","Arnavutluk Balkan Savaşları sırasında bağımsız olmuştur."],
+    a: 1
+  },
+  {
+    q: "Aşağıdakilerden hangisi II. Meşrutiyetin ilan edilme sürecini hızlandırmıştır?",
+    o: ["Reval Görüşmeleri","Paris Antlaşması","Tersane Konferansı","Viyana Kongresi","Muharrem Kararnamesi"],
+    a: 0
+  },
+  {
+    q: "I. Derne\nII. Tobruk\nIII. Kireçtepe\n\nMustafa Kemal Paşa, Trablusgarp Savaşı'nda yukarıdaki yerlerden hangilerinde İtalyanlara karşı savaşmıştır?",
+    o: ["Yalnız I","Yalnız II","I ve II","II ve III","I, II ve III"],
+    a: 2
+  },
+  {
+    q: "II. Abdülhamit Dönemi'nde devletin resmi ideolojisi aşağıdakilerden hangisidir?",
+    o: ["Türkçülük","Batıcılık","Osmanlıcılık","İslamcılık","Adem-i Merkeziyetçilik"],
+    a: 3
+  },
+  {
+    q: "Mithat Paşa'nın da hazırlanmasında etkili olduğu Kanun-i Esasi hangi dönemde ilan edilmiştir?",
+    o: ["III. Selim Dönemi","Meşrutiyet Dönemi","Fetret Devri","Köprülüler Dönemi","Cumhuriyet Dönemi"],
+    a: 1
+  },
+  {
+    q: `Balkan Savaşları'nın;\n- Rusya'nın Panslavizm politikası,\n- Balkan devletlerinin Osmanlı'yı Balkanlardan atma düşüncesi,\n- Balkanlardaki Osmanlı ordusunun terhis edilmesi\nNedenlerine bakılarak aşağıdakilerden hangisi söylenemez?`,
+    o: ["Rusya'nın Balkan milletlerini Osmanlı'ya karşı kışkırttığı","Balkan Savaşları'nın çıkmasında milliyetçilik düşüncesinin etkili olduğu","Osmanlı'nın uyguladığı yanlış politikanın savaşın başlamasında etkili olduğu","Osmanlı Devleti'nin Balkan Devletleri'ne karşı saldırgan davrandığı","Rusya'nın Osmanlı'yı zayıflatmak istediği"],
+    a: 3
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devleti'nde, Tanzimat Dönemi'nde görülen gelişmelerden biridir?",
+    o: ["İlk Osmanlı matbaasının açılması","Müslüman olmayanların askerlik yapabilmesi","Takvim-i Vekayi'nin çıkarılması","Yeniçeri Ocağı'nın kurulması","Nizam-ı Cedit Ordusunun kurulması"],
+    a: 2
+  },
+  {
+    q: "Tanzimat Dönemi'nde ön planda olan ve Genç Osmanlılar tarafından savunulan düşünce akımı aşağıdakilerden hangisidir?",
+    o: ["Slavcılık","Türkçülük","Osmanlıcılık","İslamcılık","Adem-i Merkeziyetçilik"],
+    a: 2
+  },
+  {
+    q: "Osmanlı Devleti'nde, matbaanın Müslümanlar tarafından kurulmasına öncülük eden kişi aşağıdakilerden hangisidir?",
+    o: ["Piri Reis","Koçi Bey","Şinasi","İbrahim Müteferrika","Katip Çelebi"],
+    a: 3
+  },
+  {
+    q: "Aşağıdakilerden hangisi 1789'da gerçekleşen Fransız İhtilali'nin sonuçları arasında yer almaz?",
+    o: ["Mutlak Monarşiler güçlenmiştir","Egemenliğin halka ait olduğu kabul edilmiştir","Eşitlik, özgürlük ve kardeşlik ilkeleri yayılmıştır","Yakın Çağ başlamıştır","Milliyetçilik ilkesi yayılmıştır"],
+    a: 0
+  },
+  {
+    q: "Aşağıdaki bilgilerden hangisi yanlıştır?",
+    o: ["Mustafa Kemal Paşa Hareket Ordusu'nda görev almıştır","Osmanlı Devleti Almanlarla Uşi Antlaşması'nı imzalamıştır","Balkan Savaşları 1912-1913 yıllarında yapılmıştır","Islahat Fermanı'nın ilanında etkili olan düşünce Osmanlıcılık'tır","Meclis-i Mebusan üyeleri halk tarafından seçilmiştir"],
+    a: 1
+  },
+  {
+    q: "Osmanlı Devleti, İngiltere'nin Hindistan ile olan ulaşımını kesmek ve Mısır'ı geri almak için aşağıdaki cephelerden hangisini açmıştır?",
+    o: ["Kanal Cephesi","Galiçya Cephesi","Irak Cephesi","Çanakkale Cephesi","Kafkas Cephesi"],
+    a: 0
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devletinin Birinci Dünya Savaşı sırasında aldığı kararlardan biridir?",
+    o: ["II. Meşrutiyetin ilanı","Kapitülasyonların kaldırılması","On iki adaların geçici olarak İtalya'ya bırakılması","Kanun-i Esasinin ilanı","Kıbrıs Adasının İngiltere'ye bırakılması"],
+    a: 1
+  },
+  {
+    q: "Osmanlı Devleti'nin I. Dünya savaşı sırasında kaybettiği topraklar arasında aşağıdakilerden hangisinin olduğu söylenemez?",
+    o: ["Suriye","Filistin","Hicaz","Arnavutluk","Irak"],
+    a: 3
+  },
+  {
+    q: `Mondros Ateşkes antlaşmasından sonra ortaya çıkan;\n- Bölgesel direniş cemiyetlerinin kurulması\n- Kuvay-ı Milli birliklerinin oluşturulması\n- Kongre ve mitinglerin yapılması\ngibi gelişmeler aşağıdakilerden hangisinin kanıtıdır?`,
+    o: ["Wilson İlkeleri'nin uygulandığının","İstanbul hükümetinin ulusun haklarını koruyamadığının","İtilaf Devletleri arasında görüş ayrılıklarının yaşandığının","Misak-ı Milli kararlarının amacına ulaştığının","Mandater yönetimin benimsendiğinin"],
+    a: 1
+  },
+  {
+    q: "Özgürlükleri sınırlandırması nedeniyle, aydınların anayasayı tekrar yürürlüğe koyma mücadelesi vermelerine neden olan ve sonrasında \"Hürriyet\"i ilan etmek zorunda kalan Osmanlı padişahı aşağıdakilerden hangisidir?",
+    o: ["IV. Murat","I. Abdülmecit","II. Abdülhamit","Vahdettin","Abdülaziz"],
+    a: 2
+  },
+  {
+    q: `Fransız İhtilali sırasında ilan edilen İnsan ve Vatandaş Hakları Bildirisi'nde "Hiçbir kişi ve kuruluş milletçe verilmeyen bir egemenlik hakkını kullanamaz" kararı yer almıştır.\n\nBu karar ile aşağıdakilerden hangisine karşı çıkıldığı savunulabilir?`,
+    o: ["Halkçılık ilkesine","Liberal ekonomiye","Feodaliteye","Mutlak monarşilere","Sömürgeciliğe"],
+    a: 3
+  },
+  {
+    q: "Bir devletin kurulabilmesi için bir takım temel öğelere gereksinim vardır. Aşağıdakilerden hangisi devletin kurulabilmesi için gerekli olan öğelerden birisidir?",
+    o: ["Bayrak","Demokrasi","Meclis","Vatan","Milli Marş"],
+    a: 3
+  },
+  {
+    q: "Osmanlı Devleti'nin, 19. yüzyılda \"milliyetçiliğin\" etkisiyle kaybettiği topraklar arasında aşağıdakilerden hangisinin olduğu söylenemez?",
+    o: ["Yunanistan","Romanya","Sırbistan","Mısır","Arnavutluk"],
+    a: 3
+  },
+  {
+    q: "Aşağıdakilerden hangisi Osmanlı Devleti'nde Tanzimat Döneminde görülen gelişmelerden biridir?",
+    o: ["İlk Osmanlı matbaasının açılması","Müslüman olmayanların askerlik yapabilmesi","İlk resmi gazetenin çıkarılması","Yeniçeri Ocağının kurulması","Nizam-ı Cedid Ordusunun kurulması"],
+    a: 2
+  },
+  {
+    q: "Megali İdea fikrini benimseyerek Büyük Bizans'ı yeniden Anadolu coğrafyası üzerinde canlandırmayı ilke edinen devlet aşağıdakilerden hangisidir?",
+    o: ["Bulgaristan","Çarlık Rusya","Yunanistan","Sırbistan","İngiltere"],
+    a: 2
+  },
+  {
+    q: "Birinci Dünya Savaşı'nın sonuçları arasında aşağıdakilerden hangisi yer almaz?",
+    o: ["Soğuk savaş dönemi başladı","Çok uluslu imparatorluklar dağıldı","Rejim değişiklikleri oldu","Avrupa haritası yeniden çizildi","Savaşan ülkelerde ekonomik sıkıntılar yaşandı"],
+    a: 0
+  },
+  {
+    q: "Osmanlı Devleti'nde eski ve yeni kurumlar işlevlerini bir arada yürütmüştür. Bu durum aşağıdaki dönemlerden hangisiyle başlamıştır?",
+    o: ["Gerileme Dönemi","Yükselme Dönemi","Duraklama Dönemi","Tanzimat Dönemi","Meşrutiyet Dönemi"],
+    a: 3
+  },
+  {
+    q: "Kanun-i Esasi'de yer alan \"Hükümet, padişaha karşı sorumludur.\" maddesi 1909'da \"Hükümet, Meclise karşı sorumludur.\" şeklinde değiştirilmiştir.\n\nBu değişiklik değerlendirildiğinde aşağıdaki yargılardan hangisine ulaşılabilir?",
+    o: ["Padişahın yetkileri arttırılmıştır.","Monarşi yolunda önemli bir adım atılmıştır.","Hükümetin seçimi Meclis dışından da yapılabilecekti.","Yeni anayasa ile halk oyunun önemi artmıştır.","Mebuslar Meclisi'nin yönetimdeki etkisi artmıştır."],
+    a: 3
+  },
+  {
+    q: "\"Ulusal egemenlik demokrasinin vazgeçilmez temel öğelerinden biridir\"\nAşağıdakilerden hangisi bu ilkeye uygun bir uygulamadır?",
+    o: ["Milletvekilliği süresinin sınırsız olması","Reşit olan her vatandaşın oyunu serbestçe kullanması","Yasama, yürütme ve yargı yetkilerinin süresiz tek kişide toplanması","Milletvekili sayısının azaltılması","Hükümet yetkilerinin meclis yetkilerinden üstün olması"],
+    a: 1
+  },
+  {
+    q: "Güvenlik gerekçesiyle Osmanlı ülkesinin stratejik bölgelerinin işgal edilmesine olanak tanıyan hüküm aşağıdakilerden hangisinde yer almıştır?",
+    o: ["Sevr Antlaşması","Kars Antlaşması","Mondros Ateşkes Antlaşması","Ankara Antlaşması","Mudanya Ateşkes Antlaşması"],
+    a: 2
+  },
+  {
+    q: "Aşağıdaki cemiyetlerden hangisi Mondros Ateşkesinden sonra Rumların ülke sınırları içindeki bağımsızlık faaliyetlerine tepki olarak kurulan örgütlerden biri değildir?",
+    o: ["Hürriyet ve İtilaf Partisi","Trakya Paşaeli Cemiyeti","Redd-i İlhak Cemiyeti","İzmir Müdafaa-i Hukuk Cemiyeti","Trabzon Muhafaza-i Hukuk Cemiyeti"],
+    a: 0
+  },
+  {
+    q: "\"İtilaf Devletlerince alınan karar gereği 15 Mayıs 1919'da İzmir resmen işgal edilmiştir.\"\nİşgal kararının alınmasında ve bu kararın fiilen uygulanmasında doğrudan ilişkili olan devletler aşağıdakilerden hangisinde birlikte verilmiştir?",
+    o: ["ABD – Yunanistan","İtalya – Fransa","İngiltere – Rusya","ABD – İtalya","İngiltere – Yunanistan"],
+    a: 4
+  },
+  {
+    q: "İrade-i Milliye gazetesi aşağıdaki gelişmelerden hangisi sonrasında yayınlanmaya başlamıştır?",
+    o: ["Misak-ı Milli'nin ilanı","I. TBMM'nin açılması","Sivas Kongresi","Son Osmanlı Meclisi'nin toplanması","Amasya Görüşmeleri"],
+    a: 2
+  },
+  {
+    q: "Mondros Ateşkes Antlaşması sonrası oluşan \"Mütareke basını\" deyimi ile anlatılmak istenen nedir?",
+    o: ["Teslimiyetçi basın","İngiliz karşıtı basın","Milli mücadele yanlısı basın","Fransa karşıtı basın","Anadolu yanlısı basın"],
+    a: 0
+  },
+  {
+    q: `Tanzimat Fermanının;\n- Herkesin can, mal, namus güvenliği sağlanacaktır.\n- Mahkemeler herkese açık olacak ve kimse yargılanmadan cezalandırılmayacak\n- Askerlik vatan borcu olarak kabul edilecek ve her vatandaş sorumlu tutulacak\nmaddelerine bakılarak,\nI. Eşitlik ilkesi vurgulanmıştır\nII. Osmanlıcılık ilkesi hayata geçirilmeye çalışılmıştır.\nIII. Devlet kişisel hakları gözeteceğini belirtmiştir.\nYargılarından hangilerine ulaşılabilir?`,
+    o: ["Yalnız I","Yalnız II","I ve II","II ve III","I, II ve III"],
+    a: 4
+  },
+  {
+    q: "Yönetim belli bir hanedandan seçilen tek bir kişinin kontrolü altındadır. Yönetimde bulunan bu kişi tüm egemenlik yetkisini kendi elinde bulundurur. Ayrıca bu yetkiler kişinin ölümünden sonra onun soyundan gelen kişiler tarafından kullanılmaya devam edilir.\n\nYukarıda sözü edilen egemenlik türü aşağıdakilerden hangisidir?",
+    o: ["Teokrasi","Demokrasi","Totaliter","Monarşi","Oligarşi"],
+    a: 3
+  },
+  {
+    q: "I. Padişahın meclisi açma ve kapama yetkisine sınırlandırma getirilmesi\nII. Uluslararası antlaşmaların meclis onayına sunulma zorunluluğunun getirilmesi\nIII. Hükümetin meclise karşı sorumlu hale getirilmesi\n\nYukarıdakilerden hangileri Osmanlı anayasası olan Kanunu Esasi'nin demokratik hale getirilmesi amacıyla yapılan değişiklikler arasında gösterilebilir?",
+    o: ["Yalnız I","Yalnız II","Yalnız III","I ve II","I, II ve III"],
+    a: 4
+  },
+  {
+    q: "Osmanlı toplumunun çok partili siyasi hayatla tanışması ve partiler aracılığıyla siyasi düşüncelerini savunabilme fırsatını aşağıdaki dönemlerin hangisinde elde etmiştir?",
+    o: ["II. Mahmut dönemi","II. Meşrutiyet dönemi","Tanzimat dönemi","III. Selim dönemi","I. Meşrutiyet dönemi"],
+    a: 1
+  },
+  {
+    q: "19. yüzyılda Osmanlı Devleti'nde azınlıkların isyan etmelerinde aşağıdakilerden hangisi etkili olmamıştır?",
+    o: ["Avrupalı devletlerin kışkırtmaları","Osmanlıcılık politikası","Rusya'nın Panslavizm siyaseti","Ortodoks patrikhanesinin faaliyetleri","Yabancı okulların çalışmaları"],
+    a: 1
+  },
+  {
+    q: "Osmanlı Devleti'nde görülen aşağıdaki gelişmelerden hangisinde Fransız İhtilali'nin etkisi görülmez?",
+    o: ["Senedi İttifak'ın imzalanmasında","Tanzimat yeniliklerinin yapılmasında","Turancılık akımının ortaya çıkmasında","Meşrutiyetlerin ilan edilmelerinde","Azınlık isyanlarının başlamasında"],
+    a: 2
+  },
+  {
+    q: "Rus Çarı I. Nikola tarafından ilk olarak 1853 tarihinde söylenen ve hızla Avrupa'da kabul gören \"Hasta Adam\" deyimi aşağıdaki devletlerin hangisi için kullanılmıştır?",
+    o: ["Almanya","Fransa","İngiltere","Osmanlı Devleti","İran"],
+    a: 3
+  },
+  {
+    q: "Aşağıdakilerden hangisi 18. yüzyıl sonlarında Avrupa'da görülmeye başlanan Sanayi Devrimi'nin ortaya çıkardığı oluşumlardan biri değildir?",
+    o: ["Üretim hızının artması","Üretimde maliyetin düşmesi","El emeğine dayalı üretimin önem kazanması","Emperyalist rekabetlerin yoğunlaşması","Avrupa'nın zenginleşmesi"],
+    a: 2
+  },
+  {
+    q: "Aşağıdakilerden hangisi II. Meşrutiyet sonrası ülkede etkili olan önemli partidir?",
+    o: ["Hürriyet ve İtilaf","İttihat ve Terakki","Halk Fırkası","Terakkiperver Cumhuriyet","Halk İştirakiyun Fırkası"],
+    a: 1
+  },
+  {
+    q: "Birinci Dünya Savaşı sonunda imzalanan ateşkes ve barış antlaşmalarının sıralaması aşağıdakilerden hangisinde doğru olarak verilmiştir?",
+    o: ["Lozan- Sevr","Mondros- Sevr","Mudanya- Lozan","Mudanya- Sevr","Mondros- Ankara"],
+    a: 1
+  },
+  {
+    q: "I. Dünya Savaşı'nın çıkmasında aşağıdakilerden hangisinin etkisinden söz edilemez?",
+    o: ["Sömürgecilik yarışı","Devletlerarası bloklaşma","Rusya'nın Panslavizm politikası","Osmanlı Devleti'nin Pantürkizm ideali","Almanya ile Fransa arasındaki Alsas-Loren sorunu"],
+    a: 3
+  },
+  {
+    q: "Osmanlı devletinde Balkan Savaşları sonucunda aşağıdaki kurtuluş çabalarından hangisinin geçerliliği ortadan kalmıştır?",
+    o: ["Türkçülük","Batıcılık","Osmanlıcılık","Panislavizm","İslamcılık"],
+    a: 2
+  },
+  {
+    q: `Almanya'nın, I. Dünya Savaşı'nda, Osmanlı Devleti'ni kendi yanına çekmeye çalışması,\nI. İtilaf Devletleri'nin savaşacağı cephe sayısını artırmak\nII. Rusya'ya karşı yeni cepheler açmak\nIII. İtilaf Devletleri'nin Boğazlardan yararlanmasını engellemek\nIV. Osmanlı Devleti'nin teknik gücünden yararlanmak\ngibi amaçlardan hangileri ile açıklanabilir?`,
+    o: ["I ve II","II ve III","Yalnız IV","I, II ve III","II, III ve IV"],
+    a: 3
+  },
+  {
+    q: "Aşağıdakilerden hangisi 13 Nisan 1909 tarihinde başlayan 31 Mart Ayaklanmasının özelliklerinden biri değildir?",
+    o: ["Meşrutiyet karşıtı bir harekettir","İrticai bir yapısı vardır","Hareket Ordusu tarafından bastırılmıştır","İttihat ve Terakki'ye tepkidir","Padişah V. Mehmet Reşat'ın istibdat (baskı) yönetimine son vermiştir"],
+    a: 4
+  },
+  {
+    q: "Türk anayasacı gelişim tarihinde ilk defa Osmanlı Padişahı hangisiyle kendisi dışında bir otoritenin varlığını kabul etmiştir?",
+    o: ["Sened-i İttifak","Tanzimat Fermanı","Islahat Fermanı","1876 Kanun-i Esasisi","1909 Kanun-i Esasisi"],
+    a: 0
+  }
+];
+
+let shuffled = [];
+let current = 0;
+let correct = 0;
+let wrong = 0;
+let answered = false;
+
+const letters = ['A','B','C','D','E'];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  shuffled = shuffle(questions.map((q,i) => i));
+  current = 0;
+  correct = 0;
+  wrong = 0;
+  updateScore();
+  document.getElementById('quiz-card').style.display = '';
+  document.getElementById('finish-screen').style.display = 'none';
+  showQuestion();
+}
+
+function showQuestion() {
+  answered = false;
+  const idx = shuffled[current];
+  const q = questions[idx];
+
+  document.getElementById('q-number').textContent = `Soru ${current + 1} / ${shuffled.length}`;
+  document.getElementById('q-text').textContent = q.q;
+
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  q.o.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i, btn, q.a, opts);
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+
+  const pct = (current / shuffled.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function selectAnswer(chosen, btn, correct_idx, opts) {
+  if (answered) return;
+  answered = true;
+
+  const buttons = opts.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  const fb = document.getElementById('feedback');
+
+  if (chosen === correct_idx) {
+    btn.classList.add('correct');
+    fb.textContent = '✓ Doğru!';
+    fb.className = 'feedback correct';
+    correct++;
+  } else {
+    btn.classList.add('wrong');
+    buttons[correct_idx].classList.add('reveal');
+    fb.textContent = `✗ Yanlış! Doğru cevap: ${letters[correct_idx]}) ${questions[shuffled[current]].o[correct_idx]}`;
+    fb.className = 'feedback wrong';
+    wrong++;
+  }
+
+  fb.style.display = 'block';
+  document.getElementById('next-btn').style.display = 'block';
+  updateScore();
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= shuffled.length) {
+    showFinish();
+  } else {
+    showQuestion();
+  }
+}
+
+function updateScore() {
+  document.getElementById('sc-correct').textContent = correct;
+  document.getElementById('sc-wrong').textContent = wrong;
+  document.getElementById('sc-answered').textContent = correct + wrong;
+  document.getElementById('sc-remain').textContent = shuffled.length - current;
+}
+
+function showFinish() {
+  document.getElementById('quiz-card').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '100%';
+  const fs = document.getElementById('finish-screen');
+  fs.style.display = 'block';
+  const total = shuffled.length;
+  const pct = Math.round((correct / total) * 100);
+  document.getElementById('final-score').textContent = `${correct} / ${total}`;
+  let msg = '';
+  if (pct >= 85) msg = 'Muhteşem! Sınava hazırsın!';
+  else if (pct >= 70) msg = 'Çok iyi! Biraz daha çalışmaya devam et.';
+  else if (pct >= 50) msg = 'Fena değil, ama daha fazla pratik yapmalısın.';
+  else msg = 'Daha çok çalışman gerekiyor. Tekrar dene!';
+  document.getElementById('final-text').textContent = `Başarı oranı: %${pct} — ${msg}`;
+  updateScore();
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+startQuiz();
+</script>
+</body>
+</html>
